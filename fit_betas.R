@@ -1,41 +1,62 @@
 #Function that return the coeffient for each value of class
 #Input variables:
-#                 data.frame: data frame Type: data.frame
-#                 parents: parent variable. Type: String
-#                 class: class variable. Type: String
-#                 variable: children variable. Type: c()
+#                 input: name of the data 
+#                 parents: parents variable. Type: c()
+#                 class: name of the class. Type: String
+#                 variable: children variable. Type: String
 #output variable: 
-#                 the coeffient for each value of class
+#                 the coeffients for each value of class
 
 #Program:Rstudio Version 1.2.1578
 #Package: None
-#Date:06/03/2020
-
-fit_beta<-function(data.frame,parents,class,variable){
+#Date:19/03/2020
+fit_beta<-function(input,parents,Class,variable){
   
-  data <- subset(data.frame, Species == class) 
-  
-  formula<-paste(parents,"~")
-  for (i in 1:length(variable)){
+  dataFrame<-data.frame(input)
+  formula<-paste(variable,"~")
+  for (i in 1:length(parents)){
     
-    formula<-paste(formula,variable[i:i])#generate the formula
+    formula<-paste(formula,parents[i:i])#generate the formula
     i=i+1
     
-    if( is.na(variable[i:i])){ # if no more children variable, return the oeficient
-      result<-lm(formula,data)$coef
+    if( is.na(parents[i:i])){ # if no more parent variable to add in the formula
+      
+      valueClass<-unique(dataFrame[Class])#obtain differet values of theclass
+      classPosition<-grep(Class,colnames(dataFrame),value=F)#position of the property class in the data frame
+
+      for (k in 1:nrow(valueClass)){
+
+        data <- subset(dataFrame, dataFrame[classPosition] == as.character(valueClass[k,1]))#subset according to the value of the class
+        e<-lm(formula,data)$coef
+        
+        #generate the result
+        if (k==1){
+          result<-cbind(e)
+          newRowName<-as.character(valueClass[k,1])
+        }
+        else{
+          result<-cbind(result,e)
+          newRowName<-c(newRowName,as.character(valueClass[k,1]))
+        }
+      
+      }
+      
+      colnames(result)<-newRowName
       return(result)
       break
     }
     
-    else{#if there are more children variable, continue to generate the formula
+    else{#if there are more parent variable, continue to generate the formula
       formula<-paste(formula,'+')
     }
     
   }
+  
 }
 
 
 #example
+x<-fit_beta(iris,c('Sepal.Length','Sepal.Width','Petal.Width'),'Species','Petal.Length')
+x
 
-betas<-fit_beta(data.frame(iris),'Sepal.Length','versicolor',c('Sepal.Width','Petal.Width'))
-betas
+
